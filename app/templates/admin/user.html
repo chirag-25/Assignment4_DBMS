@@ -21,10 +21,12 @@
         <div class="form-group my-1">
           <label for="name">Name</label>
           <input type="text" class="form-control" id="name" name="name">
+          <div id="name-error" style="color: red;"></div>
         </div>
         <div class="form-group my-1">
           <label for="id">Aadhar ID</label>
           <input type="text" class="form-control" id="id" name="aadhar">
+          <div id="name-error" style="color: red;"></div>
         </div>
         <div class="form-group my-1">
           <label for="dob">DOB:</label>
@@ -101,7 +103,7 @@
         </div>
 
       </div>
-      <button type="submit" class="btn btn-primary">Search</button>
+      <button type="submit" class="btn btn-primary" onclick="return validateForm()" >Search</button>
     </form>
   </div>
 
@@ -560,7 +562,28 @@
     document.querySelector("#profile_age").textContent = "Age: " + age;
     document.querySelector("#profile_project_table").innerHTML = projects;
     document.querySelector("#profile_photo").src = photo;
+    
   }
+    function validateForm() {
+        var nameInput = document.getElementById("name");
+        var nameError = document.getElementById("name-error");
+        var nameValue = nameInput.value.trim();
+
+        if (!validateName(nameValue)) {
+            nameError.innerHTML = "This field must contain only alphabets and spaces";
+            return false;
+        }
+
+        return true;
+        console.log("hello")
+    }
+
+    function validateName(name) {
+        var regex = /^[a-zA-Z\s]+$/;
+        return regex.test(name);
+    }
+
+  
 
 
 </script>
