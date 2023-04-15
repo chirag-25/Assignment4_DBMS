@@ -22,6 +22,9 @@ app.config['MYSQL_DB'] = db['mysql_db']
 
 mysql = MySQL(app)
 
+team_profile_pic_path = os.path.join('static', 'team_profile_photos')
+beneficiary_pic_path = os.path.join('static', 'beneficiary_photos')
+project_pic_path = os.path.join('static', 'project_photos')
 
 def if_admin():
     cursor = mysql.connection.cursor()
@@ -132,7 +135,7 @@ def user_profile():
         }
         profileDetails.append(user_profile)
 
-    photo_name = str(user_profile["employ_id"]) + ".jpg"
+    photo_name = str(temp_id) + ".jpg"
     print(f'photo_name: {photo_name}')
     print(f"potos url: {profileDetails[0]['photo_url']}")
     # image not in the database.
