@@ -48,12 +48,12 @@ salary int not null,
 position varchar(50) not null,
 year_of_joining date not null,
 year_of_leaving date default null,
-reason_of_leaving text default null
+reason_of_leaving text default null,
+profile_photo longblob default null
 );
 
-INSERT INTO Teams (employee_id, name, email_id, salary, position, year_of_joining, year_of_leaving, reason_of_leaving) VALUES
-('1', 'Ravi Kumar', 'ravi.kumar@example.com', 50000, 'Admin', '2015-01-01', null, null);
-
+INSERT INTO Teams (employee_id, name, email_id, salary, position, year_of_joining, year_of_leaving, reason_of_leaving, profile_photo) VALUES
+('1', 'Ravi Kumar', 'ravi.kumar@example.com', 50000, 'Admin', '2015-01-01', null, null, null);
 create table Projects (
 event_name varchar(50),
 start_date date,
@@ -70,7 +70,7 @@ CREATE TABLE ProjectPhotos (
   id INT AUTO_INCREMENT PRIMARY KEY,
   project_event_name VARCHAR(50),
   project_start_date DATE,
-  photo_url longblob NOT NULL,
+  photo_url longblob default NULL,
   caption VARCHAR(255) DEFAULT NULL,
   FOREIGN KEY (project_event_name, project_start_date)
 	REFERENCES Projects(event_name, start_date)
@@ -268,17 +268,16 @@ on update cascade
 #Adding dummy values to Beneficiary
 INSERT INTO Beneficiary (aadhar_id, name, date_of_birth, gender, marital_status, education, photo, employed, photo_caption)
 VALUES
-(123456789011, 'Asha Sharma', '1980-05-12', 'Female', 'Married', 'Master of Business Administration', 'https://example.com/photo1.jpg', 'Yes', 'Photo of Asha Sharma'),
-(234567890121, 'Rahul Singh', '1995-08-02', 'Male', 'Unmarried', 'Bachelor of Engineering', 'https://example.com/photo1.jpg', 'Yes', 'Photo of Rahul Singh'),
-(345678901231, 'Priya Patel', '1988-12-25', 'Female', 'Married', 'Doctor of Medicine', 'https://example.com/photo1.jpg', 'No', NULL),
-(456789012341, 'Rajesh Kumar', '1976-09-18', 'Male', 'Married', 'Bachelor of Science', 'https://example.com/photo1.jpg', 'Yes', 'Photo of Rajesh Kumar'),
-(567890123451, 'Sneha Gupta', '1992-04-01', 'Female', 'Unmarried', 'Master of Computer Applications', 'https://example.com/photo1.jpg', 'No', NULL),
-(678901234561, 'Vikram Singh', '1985-06-21', 'Male', 'Married', 'Bachelor of Commerce', 'https://example.com/photo1.jpg', 'Yes', 'Photo of Vikram Singh'),
-(789012345671, 'Anjali Reddy', '1990-03-15', 'Female', 'Unmarried', 'Bachelor of Arts', 'https://example.com/photo1.jpg', 'No', NULL),
-(890123456781, 'Amit Sharma', '1983-11-08', 'Male', 'Married', 'Master of Science', 'https://example.com/photo1.jpg', 'Yes', 'Photo of Amit Sharma'),
+(123456789011, 'Asha Sharma', '1980-05-12', 'Female', 'Married', 'Master of Business Administration', NULL, 'Yes', 'Photo of Asha Sharma'),
+(234567890121, 'Rahul Singh', '1995-08-02', 'Male', 'Unmarried', 'Bachelor of Engineering', NULL, 'Yes', 'Photo of Rahul Singh'),
+(345678901231, 'Priya Patel', '1988-12-25', 'Female', 'Married', 'Doctor of Medicine', NULL, 'No', NULL),
+(456789012341, 'Rajesh Kumar', '1976-09-18', 'Male', 'Married', 'Bachelor of Science', NULL, 'Yes', 'Photo of Rajesh Kumar'),
+(567890123451, 'Sneha Gupta', '1992-04-01', 'Female', 'Unmarried', 'Master of Computer Applications', NULL, 'No', NULL),
+(678901234561, 'Vikram Singh', '1985-06-21', 'Male', 'Married', 'Bachelor of Commerce', NULL, 'Yes', 'Photo of Vikram Singh'),
+(789012345671, 'Anjali Reddy', '1990-03-15', 'Female', 'Unmarried', 'Bachelor of Arts', NULL, 'No', NULL),
+(890123456781, 'Amit Sharma', '1983-11-08', 'Male', 'Married', 'Master of Science', NULL, 'Yes', 'Photo of Amit Sharma'),
 (901234567891, 'Shalini Verma', '1987-07-14', 'Female', 'Married', 'Bachelor of Business Administration', NULL, 'No', NULL),
-(123450987651, 'Sanjay Kumar', '1979-01-31', 'Male', 'Married', 'Master of Arts', 'https://example.com/photo1.jpg', 'Yes', 'Photo of Sanjay Kumar');
-
+(123450987651, 'Sanjay Kumar', '1979-01-31', 'Male', 'Married', 'Master of Arts', NULL, 'Yes', 'Photo of Sanjay Kumar');
  
 #Adding dummy values to Funding
 INSERT INTO Funding (email_id, amount, funder_name, date) VALUES
@@ -421,218 +420,50 @@ VALUES
 
 
 -- #Adding dummy values to BeneficiaryPhoneEntity
--- INSERT INTO BeneficiaryPhoneEntity (aadhar_id, phone_number)
--- VALUES
--- (123456789012, 9876543210),
--- (234567890123, 8765432109),
--- (345678901234, 7654321098),
--- (456789012345, 6543210987),
--- (567890123456, 5432109876),
--- (678901234567, 4321098765),
--- (789012345678, 3210987654),
--- (890123456789, 2109876543),
--- (901234567890, 1098765432),
--- (123450987654, 1234567890);
+
 INSERT INTO BeneficiaryPhoneEntity (aadhar_id, phone_number)
 VALUES 
 (123450987651, 9876543210);
 
-
 #Adding dummy values to EmployeePhoneEntity
--- INSERT INTO TeamPhone (employee_id, phone_number, location) VALUES
--- ('E001', 9876543210, 'Delhi'),
--- ('E001', 9898989898, 'Mumbai'),
--- ('E002', 8765432109, 'Kolkata'),
--- ('E003', 7894561230, 'Bangalore'),
--- ('E003', 9865327410, 'Chennai'),
--- ('E004', 9876543210, 'Pune'),
--- ('E005', 8765432109, 'Hyderabad'),
--- ('E006', 7894561230, 'Mumbai'),
--- ('E007', 9865327410, 'Chennai'),
--- ('E010', 9876543210, 'Delhi');
-
+INSERT INTO TeamPhone (employee_id, phone_number, location) VALUES
+('1', 9876543210, 'Delhi');
 
 -- Relational Tables 
-
 #Adding dummy values to Organize
--- INSERT INTO Organize (employee_id, event_name, start_date, role)
--- VALUES 
--- ('E001', 'Project A', '2022-01-01', 'Manager'),
--- ('E002', 'Project A', '2022-01-01', 'Developer'),
--- ('E003', 'Project A', '2022-01-01', 'Developer'),
--- ('E004', 'Project A', '2022-01-01', 'Designer'),
--- ('E005', 'Project B', '2022-02-01', 'Manager'),
--- ('E006', 'Project B', '2022-02-01', 'Developer'),
--- ('E007', 'Project B', '2022-02-01', 'Developer'),
--- ('E008', 'Project C', '2022-03-01', 'Designer'),
--- ('E009', 'Project D', '2022-04-01', 'Manager'),
--- ('E010', 'Project D', '2022-04-01', 'Developer'),
--- ('E001', 'Project E', '2022-05-01', 'Manager'),
--- ('E002', 'Project E', '2022-05-01', 'Developer'),
--- ('E003', 'Project E', '2022-05-01', 'Developer'),
--- ('E004', 'Project E', '2022-05-01', 'Designer'),
--- ('E005', 'Project F', '2022-06-01', 'Manager'),
--- ('E006', 'Project F', '2022-06-01', 'Developer'),
--- ('E007', 'Project F', '2022-06-01', 'Developer'),
--- ('E008', 'Project G', '2022-07-01', 'Designer'),
--- ('E009', 'Project H', '2022-08-01', 'Manager'),
--- ('E010', 'Project H', '2022-08-01', 'Developer'),
--- ('E001', 'Project I', '2022-09-01', 'Manager'),
--- ('E002', 'Project I', '2022-09-01', 'Developer'),
--- ('E003', 'Project I', '2022-09-01', 'Developer'),
--- ('E004', 'Project I', '2022-09-01', 'Designer'),
--- ('E005', 'Project J', '2022-10-01', 'Manager'),
--- ('E006', 'Project J', '2022-10-01', 'Developer'),
--- ('E007', 'Project J', '2022-10-01', 'Developer');
+INSERT INTO Organize (employee_id, event_name, start_date, role)
+VALUES 
+('1', 'Project A', '2022-01-01', 'Manager');
 
 #Adding dummy values to Sponsors
 INSERT INTO sponsors (email_id, event_name, start_date)
-VALUES ('abc@gmail.com', 'Project B', '2022-02-01'),
-       ('def@gmail.com', 'Project B', '2022-02-01'),
-       ('ghi@gmail.com', 'Project B', '2022-02-01'),
-       ('jkl@gmail.com', 'Project B', '2022-02-01'),
-       ('mno@gmail.com', 'Project B', '2022-02-01'),
-       ('pqr@gmail.com', 'Project B', '2022-02-01'),
-       ('stu@gmail.com', 'Project B', '2022-02-01'),
-       ('vwx@gmail.com', 'Project B', '2022-02-01'),
-       ('yz@gmail.com', 'Project B', '2022-02-01'),
-       ('abc1@gmail.com', 'Project B', '2022-02-01'),
-		('abc@gmail.com', 'Project C', '2022-03-01'),
-       ('def@gmail.com', 'Project C', '2022-03-01'),
-       ('ghi@gmail.com', 'Project C', '2022-03-01'),
-       ('jkl@gmail.com', 'Project C', '2022-03-01'),
-       ('mno@gmail.com', 'Project C', '2022-03-01'),
-       ('pqr@gmail.com', 'Project C', '2022-03-01'),
-       ('stu@gmail.com', 'Project C', '2022-03-01'),
-       ('vwx@gmail.com', 'Project C', '2022-03-01'),
-       ('yz@gmail.com', 'Project C', '2022-03-01'),
-       ('abc1@gmail.com', 'Project C', '2022-03-01'),
-		('abc@gmail.com', 'Project F', '2022-06-01'),
-       ('def@gmail.com', 'Project F', '2022-06-01'),
-       ('ghi@gmail.com', 'Project F', '2022-06-01'),
-       ('jkl@gmail.com', 'Project F', '2022-06-01'),
-       ('mno@gmail.com', 'Project F', '2022-06-01'),
-       ('pqr@gmail.com', 'Project F', '2022-06-01'),
-       ('stu@gmail.com', 'Project F', '2022-06-01'),
-       ('vwx@gmail.com', 'Project F', '2022-06-01'),
-       ('yz@gmail.com', 'Project F', '2022-06-01'),
-       ('abc1@gmail.com', 'Project F', '2022-06-01');
+VALUES ('abc@gmail.com', 'Project B', '2022-02-01');
 
 #Adding dummy values to Volunteering
 INSERT INTO volunteering (email_id, event_name, start_date) VALUES
-('john.doe@example.com', 'Project A', '2022-01-01'),
-('john.doe@example.com', 'Project D', '2022-04-01'),
-('john.doe@example.com', 'Project E', '2022-05-01'),
-('jane.doe@example.com', 'Project B', '2022-02-01'),
-('jane.doe@example.com', 'Project C', '2022-03-01'),
-('jane.doe@example.com', 'Project G', '2022-07-01'),
-('rohit.sharma@example.com', 'Project D', '2022-04-01'),
-('rohit.sharma@example.com', 'Project E', '2022-05-01'),
-('rohit.sharma@example.com', 'Project H', '2022-08-01'),
-('priya.rai@example.com', 'Project A', '2022-01-01'),
-('priya.rai@example.com', 'Project B', '2022-02-01'),
-('amit.kumar@example.com', 'Project A', '2022-01-01'),
-('amit.kumar@example.com', 'Project F', '2022-06-01'),
-('divya.mishra@example.com', 'Project H', '2022-08-01'),
-('rahul.gupta@example.com', 'Project C', '2022-03-01'),
-('pooja.shah@example.com', 'Project B', '2022-02-01'),
-('avinash.singh@example.com', 'Project G', '2022-07-01'),
-('neha.patel@example.com', 'Project J', '2022-10-01');
+('john.doe@example.com', 'Project A', '2022-01-01');
 
 #Adding dummy values to HeldAt
-
-
-
 
 #Adding dummy values to trains
 INSERT INTO trains (email_id, event_name, start_date)
 VALUES
-('trainer1@gmail.com', 'Project A', '2022-01-01'),
-('trainer2@gmail.com', 'Project A', '2022-01-01'),
-('trainer3@gmail.com', 'Project B', '2022-02-01'),
-('trainer4@gmail.com', 'Project B', '2022-02-01'),
-('trainer5@gmail.com', 'Project C', '2022-03-01'),
-('trainer6@gmail.com', 'Project C', '2022-03-01'),
-('trainer7@gmail.com', 'Project D', '2022-04-01'),
-('trainer8@gmail.com', 'Project D', '2022-04-01'),
-('trainer9@gmail.com', 'Project E', '2022-05-01'),
-('trainer10@gmail.com', 'Project F', '2022-06-01'),
-('trainer1@gmail.com', 'Project G', '2022-07-01'),
-('trainer2@gmail.com', 'Project G', '2022-07-01'),
-('trainer3@gmail.com', 'Project H', '2022-08-01'),
-('trainer4@gmail.com', 'Project H', '2022-08-01'),
-('trainer5@gmail.com', 'Project I', '2022-09-01'),
-('trainer6@gmail.com', 'Project I', '2022-09-01'),
-('trainer7@gmail.com', 'Project J', '2022-10-01'),
-('trainer8@gmail.com', 'Project J', '2022-10-01');
-
-
+('trainer1@gmail.com', 'Project A', '2022-01-01');
 
 -- #Adding dummy values to trains
--- INSERT INTO participants (aadhar_id, event_name, start_date)
--- VALUES
--- (123456789012, 'Project A', '2022-01-01'),
--- (234567890123, 'Project A', '2022-01-01'),
--- (345678901234, 'Project A', '2022-01-01'),
--- (456789012345, 'Project B', '2022-02-01'),
--- (567890123456, 'Project B', '2022-02-01'),
--- (678901234567, 'Project C', '2022-03-01'),
--- (789012345678, 'Project D', '2022-04-01'),
--- (890123456789, 'Project E', '2022-05-01'),
--- (901234567890, 'Project F', '2022-06-01'),
--- (123450987654, 'Project G', '2022-07-01'),
--- (234567890123, 'Project H', '2022-08-01'),
--- (345678901234, 'Project H', '2022-08-01'),
--- (456789012345, 'Project H', '2022-08-01'),
--- (567890123456, 'Project I', '2022-09-01'),
--- (678901234567, 'Project J', '2022-10-01'),
--- (789012345678, 'Project J', '2022-10-01'),
--- (123456789012, 'Project J', '2022-10-01'),
--- (890123456789, 'Project J', '2022-10-01');
 INSERT INTO participants (aadhar_id, event_name, start_date)
 VALUES
-(123450987651, 'Project A', '2022-01-01');
+(123456789011, 'Project A', '2022-01-01');
 
 #Adding dummy values to TrainerBeneficiary
--- INSERT INTO TrainerBeneficiary (aadhar_id, email_id) VALUES
--- (123456789012, 'trainer1@gmail.com'),
--- (234567890123, 'trainer9@gmail.com'),
--- (456789012345, 'trainer5@gmail.com'),
--- (678901234567, 'trainer3@gmail.com'),
--- (890123456789, 'trainer4@gmail.com'),
--- (123450987654, 'trainer7@gmail.com');
-
+INSERT INTO TrainerBeneficiary (aadhar_id, email_id) VALUES
+(123456789011, 'trainer1@gmail.com');
 
 -- #Adding dummy values to assessment
--- INSERT INTO assessment (aadhar_id, event_name, start_date, Date, present_or_absent)
--- VALUES
--- (123456789012, 'Project A', '2022-01-01', '2022-01-01', 'Present'),
--- (234567890123, 'Project A', '2022-01-01', '2022-01-01', 'Absent'),
--- (345678901234, 'Project B', '2022-02-01', '2022-02-01', 'Present'),
--- (456789012345, 'Project B', '2022-02-01', '2022-02-01', 'Absent'),
--- (567890123456, 'Project C', '2022-03-01', '2022-03-01', 'Present'),
--- (678901234567, 'Project D', '2022-04-01', '2022-04-01', 'Present'),
--- (789012345678, 'Project D', '2022-04-01', '2022-04-01', 'Absent'),
--- (890123456789, 'Project E', '2022-05-01', '2022-05-01', 'Absent'),
--- (901234567890, 'Project E', '2022-05-01', '2022-05-01', 'Present'),
--- (123450987654, 'Project F', '2022-06-01', '2022-06-01', 'Present');
-
-
-
-
--- #Adding dummy values to belongs
--- INSERT INTO belongs (aadhar_id, pincode)
--- VALUES 
--- (123456789012, 380002),
--- (234567890123, 380005),
--- (345678901234, 380002),
--- (456789012345, 380004),
--- (567890123456, 382330),
--- (678901234567, 382350),
--- (789012345678, 382340),
--- (890123456789, 380002),
--- (901234567890, 382340),
--- (123450987654, 382330);
+INSERT INTO assessment (aadhar_id, event_name, start_date, Date, present_or_absent)
+VALUES
+(123456789011, 'Project A', '2022-01-01', '2022-01-01', 'Present'),
+(234567890121, 'Project A', '2022-01-01', '2022-01-01', 'Absent');
 
 INSERT INTO belongs (aadhar_id, pincode)
 VALUES 
