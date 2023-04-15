@@ -1,18 +1,18 @@
 {% extends '/admin/dashboard.html'%}
 {% block content %}
 
-        {% with messages=get_flashed_messages() %}
-    {% if messages %}
-    {% for message in messages %}
-        <div class="alert alert-danger" role="alert">
-          {{ message }}
-        </div>
-    {% endfor %}
-    {% endif %}
-    {% endwith %}
+{% with messages=get_flashed_messages() %}
+{% if messages %}
+{% for message in messages %}
+<div class="alert alert-danger" role="alert">
+  {{ message }}
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
 
 <!-- search option -->
-<div >
+<div>
   <h1>Beneficiary</h1>
   <div style="width:60%">
     <form name="searchForm" method="POST">
@@ -38,7 +38,7 @@
             <option value="Unmarried">Unmarried</option>
           </select>
         </div>
-        
+
         <div class="form-group my-1">
           <label for="id">Education</label>
           <select class="form-control" id="id" name="education">
@@ -136,7 +136,6 @@
       {% for user in profile_details %}
       <!-- print(userDetails) -->
       <tr>
-
         <th scope="row" headers="aadhar">{{user['aadhar']}}</th>
         <td headers="name">{{user['name']}}</td>
         <td headers="dob">{{user['dob']}}</td>
@@ -149,6 +148,7 @@
         <td headers="age" style="display:none;">{{user['age']}}</td>
         <td headers="village" style="display:none;">{{user['village']}}</td>
         <td headers="pincode" style="display:none;">{{user['pincode']}}</td>
+        <td headers="photo" style="display:none;">{{user['photo']}}</td>
         <td headers="projects" style="display:none;">
           <table class="table">
             <thead>
@@ -179,6 +179,7 @@
           <button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#profileModal"
             onclick="show_profile(this)">Show Profile</button>
         </td>
+
       </tr>
       {% endfor %}
 
@@ -199,7 +200,7 @@
           </button>
         </div>
         <div class="modal-body">
-          <form name="editedDetails" method="POST">
+          <form name="editedDetails" method="POST" enctype="multipart/form-data">
 
             <input type="hidden" name="signal" value="edit">
             <div class="form-group">
@@ -271,6 +272,7 @@
                 <input type="number" class="form-control" id="project_year" name="project_year" placeholder="Year"
                   min="2008" />
               </div>
+
             </div>
 
             <div class="form-group">
@@ -286,6 +288,11 @@
             <div class="form-group">
               <label for="phone_number">Add phone number</label>
               <input type="text" class="form-control" id="education" name="phone_number">
+            </div>
+            <!-- Changing the profile pic -->
+            <div class="form-group my-1">
+              <label for="beneficiary_pic_edit">Beneficiary Photo</label>
+              <input type="file" class="form-control-file" id="beneficiary_pic_edit" name="beneficiary_photo" />
             </div>
 
             <div class="modal-footer">
@@ -311,7 +318,7 @@
           </button>
         </div>
         <div class="modal-body">
-          <form name="addDetails" method="POST">
+          <form name="addDetails" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="signal" value="add">
 
             <div class="form-group">
@@ -322,7 +329,8 @@
 
             <div class="form-group">
               <label for="aadhar">Aadhar Id</label>
-              <input type="number" class="form-control" id="email" name="aadhar" min="100000000000" max="999999999999" required>
+              <input type="number" class="form-control" id="email" name="aadhar" min="100000000000" max="999999999999"
+                required>
             </div>
 
 
@@ -346,7 +354,6 @@
               <select class="form-control" id="genderSelect" name="martial">
                 <option value="Unmarried">Unmarried</option>
                 <option value="Married">Married</option>
-
               </select>
             </div>
 
@@ -377,7 +384,7 @@
                   {% endfor %}
                 </select>
                 <input type="number" class="form-control" id="project_year" name="project_year" placeholder="Year"
-                  min="2008" required/>
+                  min="2008" required />
               </div>
             </div>
 
@@ -389,11 +396,18 @@
                 {% endfor %}
               </select>
             </div>
+            
+            <!-- Changing the profile pic -->
+            <div class="form-group my-1">
+              <label for="beneficiary_pic_add">Add Beneficiary Photo (Only jpg) </label>
+              <input type="file" class="form-control-file" id="beneficiary_pic_add" name="beneficiary_photo_add" accept="image/jpeg"/>
+            </div>
 
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
               <button type="submit" class="btn btn-primary" id="saveChangesButton">Add</button>
             </div>
+
 
           </form>
         </div>
@@ -440,7 +454,7 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="profileModalLabel">Profile</h5>
+        <h5 class="modal-title" id="profileModalLabel">Beneficiary Profile</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -458,7 +472,7 @@
             <p id="profile_employed">Employed: Yes</p>
             <p id="profile_dob">DOB: 10/10/1998</p>
             <p id="profile_age">Age: 25</p>
-            <p id="profile_aadhar">Aadhar: 123456789012</p>
+            <p id="profile_aadhar">Aadhar: 1756789012</p>
             <div>
               <p id="profile_village">Village Name: Basan</p>
               <p id="profile_pincode">Pin Code: 190009</p>
@@ -468,13 +482,15 @@
 
           </div>
           <div class="col-md-4">
-            <img src="https://via.placeholder.com/150" class="img-fluid">
+            <img src="https://via.placeholder.com/150" class="img-fluid" id="profile_photo">
           </div>
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
       </div>
+      
+
     </div>
   </div>
 </div>
@@ -528,6 +544,8 @@
     let pincode = p.querySelector('td[headers="pincode"]').innerHTML;
     let age = p.querySelector('td[headers="age"]').innerHTML;
     let projects = p.querySelector('td[headers="projects"]').innerHTML;
+    let photo = p.querySelector('td[headers="photo"]').innerHTML;
+    console.log(photo);
 
     document.querySelector("#profile_name").textContent = "Name: " + name;
     document.querySelector("#profile_aadhar").textContent = "Aadhar Number: " + aadhar;
@@ -541,6 +559,7 @@
     document.querySelector("#profile_pincode").textContent = "Pincode: " + pincode;
     document.querySelector("#profile_age").textContent = "Age: " + age;
     document.querySelector("#profile_project_table").innerHTML = projects;
+    document.querySelector("#profile_photo").src = photo;
   }
 
 

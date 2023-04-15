@@ -2,7 +2,7 @@
 import MySQLdb
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_socketio import SocketIO, emit
-
+import os   
 from flask_mysqldb import MySQL
 import yaml
 from email_script import send_email
@@ -114,38 +114,75 @@ def user_profile():
     type = restrict_child_routes()
 
     cur = mysql.connection.cursor()
-    result_value = cur.execute(f"SELECT * FROM Teams where employee_id = \'{temp_id}\'")
+    result_value = cur.execute(
+        f"SELECT * FROM Teams where employee_id = \'{temp_id}\'")
     profileDetails = []
     if result_value == 1:
         user = cur.fetchall()[0]
         user_profile = {
-            'employ_id': user[0], 
+            'employ_id': user[0],
             'name': user[1],
             'email_id': user[2],
             'salary': user[3],
             'position': user[4],
             'join_date': user[5],
             'leave_date': user[6],
-            'reason': user[7]
+            'reason': user[7],
+            'photo_url': user[8]
         }
         profileDetails.append(user_profile)
+
+    photo_name = str(user_profile["employ_id"]) + ".jpg"
+    print(f'photo_name: {photo_name}')
+    print(f"potos url: {profileDetails[0]['photo_url']}")
+    # image not in the database.
+    if profileDetails[0]['photo_url'] == None:
+        location = os.path.join("static", "team_profile_photos", photo_name)
+        if os.path.isfile(location):
+            img_url = url_for(
+                'static', filename=f'team_profile_photos/{photo_name}')
+            cur.execute(
+                f"UPDATE Teams SET profile_photo = \'{img_url}\' WHERE employee_id = \'{profileDetails[0]['employ_id']}\'")
+            cur.connection.commit()
+            user_profile['photo_url'] = img_url
+        else:
+            img_url = url_for(
+                'static', filename=f'team_profile_photos/default.jpg')
+            user_profile['photo_url'] = img_url
+    # decode the byte format of the image
+    elif isinstance(profileDetails[0]['photo_url'], bytes):
+        profileDetails[0]['photo_url'] = profileDetails[0]['photo_url'].decode(
+            'utf-8')
 
     if (request.method == 'POST'):
         if request.form['signal'] == 'edit':
             print("edit of profile")
             username = request.form['username']
             email = request.form['email']
+            edit_query = f"UPDATE Teams SET name = \'{username}\', email_id = \'{email}\'"
             employ_id = temp_id
-            edit_query = f"UPDATE Teams SET name = \'{username}\', email_id = \'{email}\' WHERE employee_id = \'{employ_id}\'"
+            
+            # image upload
+            profile_pic_file = request.files['profile_pic']
+            # check if the post request has the file part
+            if profile_pic_file.filename != '':
+                profile_pic_file.save(os.path.join(
+                    team_profile_pic_path, photo_name))
+                img_url = url_for(
+                    'static', filename=f'team_profile_photos/{photo_name}')
+                edit_query = edit_query + f", profile_photo = \'{img_url}\'"
+
+            edit_query = edit_query + f" WHERE employee_id = \'{employ_id}\'"
+            # profile_pic_file.save(os.path.join("static", "team_profile_photos", profile_pic_file.filename))
             print(f"edit query: {edit_query}")
             exec_query = cur.execute(edit_query)
             mysql.connection.commit()
+            return redirect(url_for('user_profile'))
 
         elif request.form['signal'] == 'logout':
             return log_out()
 
     return render_template("admin/user_profile.html", profileDetails=profileDetails, type=type)
-
 
 
 
@@ -1209,152 +1246,174 @@ def trainers():
     return render_template("admin/trainers.html", profile_details=profile_details, projects=projects)
 
 
-@app.route("/admin/user", methods=['POST', 'GET'])
+@ app.route("/admin/user", methods=['POST', 'GET'])
 def user():
-    type = restrict_child_routes()
+    type=restrict_child_routes()
     if type == 'No_access':
         return redirect(url_for('login'))
 
-    cur = mysql.connection.cursor()
-    result_value = cur.execute("SELECT * FROM Beneficiary")
+    cur=mysql.connection.cursor()
+    result_value=cur.execute("SELECT * FROM Beneficiary")
 
     if result_value > 0:
-        userDetails = cur.fetchall()
+        userDetails=cur.fetchall()
 
     # Generate the user profile details
-    profile_details = []
+    profile_details=[]
     for user in userDetails:
-        user_profile = {'aadhar': user[0], 'name': user[1], 'dob': user[2], 'gender': user[3], 'martial': user[4],
+        user_profile={'aadhar': user[0], 'name': user[1], 'dob': user[2], 'gender': user[3], 'martial': user[4],
                         'education': user[5], 'photo': user[6], 'employed': user[7], 'photo_caption': user[8]}
-        calculate_age_query = f"SELECT TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) FROM Beneficiary WHERE aadhar_id = \'{user[0]}\'"
-        extract_village_query = f"SELECT pincode, name FROM VillageProfile WHERE pincode = (SELECT pincode FROM belongs WHERE aadhar_id = \'{user[0]}\')"
-        extract_enrolled_projects_query = f"SELECT * FROM participants WHERE aadhar_id = \'{user[0]}\'"
-        extract_phone_query = f"SELECT phone_number FROM BeneficiaryPhoneEntity WHERE aadhar_id = \'{user[0]}\'"
 
-        calculate_age = cur.execute(calculate_age_query)
-        calculate_age = cur.fetchall()
+        # check for image
+        photo_name=str(user_profile["aadhar"]) + ".jpg"
+        if user_profile['photo'] == None:
+            location=os.path.join("static", "beneficiary_photos", photo_name)
+            print(f"location in beneficiary {location}")
+            if os.path.isfile(location):
+                img_url=url_for(
+                    'static', filename=f"beneficiary_photos/{photo_name}")
+                cur.execute(
+                    f"UPDATE Beneficiary SET photo = \'{img_url}\' WHERE aadhar_id = \'{user_profile['aadhar']}\'")
+                cur.connection.commit()
+                user_profile['photo']=img_url
+            else:
+                img_url=url_for(
+                    'static', filename=f"beneficiary_photos/default.jpg")
+                user_profile['photo']=img_url
+        # decode the byte format of the image
+        elif isinstance(user_profile['photo'], bytes):
+            user_profile['photo']=user_profile['photo'].decode('utf-8')
 
-        extract_village = cur.execute(extract_village_query)
-        extract_village = cur.fetchall()
 
-        extract_enrolled_projects = cur.execute(
+
+        calculate_age_query=f"SELECT TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) FROM Beneficiary WHERE aadhar_id = \'{user[0]}\'"
+        extract_village_query=f"SELECT pincode, name FROM VillageProfile WHERE pincode = (SELECT pincode FROM belongs WHERE aadhar_id = \'{user[0]}\')"
+        extract_enrolled_projects_query=f"SELECT * FROM participants WHERE aadhar_id = \'{user[0]}\'"
+        extract_phone_query=f"SELECT phone_number FROM BeneficiaryPhoneEntity WHERE aadhar_id = \'{user[0]}\'"
+
+        calculate_age=cur.execute(calculate_age_query)
+        calculate_age=cur.fetchall()
+
+        extract_village=cur.execute(extract_village_query)
+        extract_village=cur.fetchall()
+
+        extract_enrolled_projects=cur.execute(
             extract_enrolled_projects_query)
-        extract_enrolled_projects = cur.fetchall()
+        extract_enrolled_projects=cur.fetchall()
 
-        extract_phone = cur.execute(extract_phone_query)
-        extract_phone = cur.fetchall()
+        extract_phone=cur.execute(extract_phone_query)
+        extract_phone=cur.fetchall()
 
         if len(calculate_age) > 0:
-            user_profile['age'] = calculate_age[0][0]
+            user_profile['age']=calculate_age[0][0]
         else:
-            user_profile['age'] = 'NA'
+            user_profile['age']='NA'
 
         if len(extract_village) > 0:
-            user_profile['village'] = extract_village[0][1]
-            user_profile['pincode'] = extract_village[0][0]
+            user_profile['village']=extract_village[0][1]
+            user_profile['pincode']=extract_village[0][0]
         else:
-            user_profile['village'] = 'NA'
-            user_profile['pincode'] = 'NA'
+            user_profile['village']='NA'
+            user_profile['pincode']='NA'
 
         if len(extract_enrolled_projects) > 0:
-            user_profile['projects'] = extract_enrolled_projects
+            user_profile['projects']=extract_enrolled_projects
         else:
-            user_profile['projects'] = ()
+            user_profile['projects']=()
 
         if len(extract_phone) > 0:
-            user_profile['phone'] = extract_phone[0][0]
+            user_profile['phone']=extract_phone[0][0]
         else:
-            user_profile['phone'] = 'NA'
+            user_profile['phone']='NA'
 
         profile_details.append(user_profile)
-
     # Generate projects list
-    projects_query = f"SELECT event_name FROM Projects"
-    projects_query = cur.execute(projects_query)
-    projects = cur.fetchall()
+    projects_query=f"SELECT event_name FROM Projects"
+    projects_query=cur.execute(projects_query)
+    projects=cur.fetchall()
 
     # Generate village list
-    village_query = f"SELECT name FROM VillageProfile"
-    village_query = cur.execute(village_query)
-    villages = cur.fetchall()
+    village_query=f"SELECT name FROM VillageProfile"
+    village_query=cur.execute(village_query)
+    villages=cur.fetchall()
 
     # Generate education list
-    education_list_query = f"SELECT DISTINCT education FROM Beneficiary"
-    education_list_query_query = cur.execute(education_list_query)
-    education_list = cur.fetchall()
+    education_list_query=f"SELECT DISTINCT education FROM Beneficiary"
+    education_list_query_query=cur.execute(education_list_query)
+    education_list=cur.fetchall()
 
     if (request.method == 'POST'):
         if request.form['signal'] == 'search':
-            name = request.form['name']
-            aadhar = request.form['aadhar']
-            dob = request.form['dob']
-            age = request.form['age']
-            employed = request.form['employed']
-            gender = request.form['gender']
-            martial = request.form['martial']
-            education = request.form['education']
-            village = request.form['village']
-            project = request.form['project']
-            phone_number = request.form['phone_number']
+            name=request.form['name']
+            aadhar=request.form['aadhar']
+            dob=request.form['dob']
+            age=request.form['age']
+            employed=request.form['employed']
+            gender=request.form['gender']
+            martial=request.form['martial']
+            education=request.form['education']
+            village=request.form['village']
+            project=request.form['project']
+            phone_number=request.form['phone_number']
 
             # First extract all the beneficiaries from table Beneficiary
-            where_query = f"SELECT aadhar_id FROM Beneficiary "
-            flag = False
+            where_query=f"SELECT aadhar_id FROM Beneficiary "
+            flag=False
             if name != '':
                 if flag == False:
                     where_query += f"WHERE name = \"{name}\""
                 else:
                     where_query += f"name = \"{name}\""
-                flag = True
+                flag=True
 
             if aadhar != '':
                 if flag == False:
                     where_query += f"WHERE aadhar_id = \'{aadhar}\'"
                 else:
                     where_query += f" AND aadhar_id = \'{aadhar}\'"
-                flag = True
+                flag=True
 
             if dob != '':
                 if flag == False:
                     where_query += f"WHERE date_of_birth = \'{dob}\'"
                 else:
                     where_query += f" AND date_of_birth = \'{dob}\'"
-                flag = True
+                flag=True
 
             if age != '':
                 if flag == False:
                     where_query += f"WHERE TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) = \'{age}\'"
                 else:
                     where_query += f" AND TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) = \'{age}\'"
-                flag = True
+                flag=True
 
             if employed != '':
                 if flag == False:
                     where_query += f"WHERE employed = \'{employed}\'"
                 else:
                     where_query += f" AND employed = \'{employed}\'"
-                flag = True
+                flag=True
 
             if gender != '':
                 if flag == False:
                     where_query += f"WHERE gender = \'{gender}\'"
                 else:
                     where_query += f" AND gender = \'{gender}\'"
-                flag = True
+                flag=True
 
             if martial != '':
                 if flag == False:
                     where_query += f"WHERE marital_status = \'{martial}\'"
                 else:
                     where_query += f" AND marital_status = \'{martial}\'"
-                flag = True
+                flag=True
 
             if education != '':
                 if flag == False:
                     where_query += f"WHERE education = \'{education}\'"
                 else:
                     where_query += f" AND education = \'{education}\'"
-                flag = True
+                flag=True
 
             # Combine the results of the above query with the results of the village and project search
             if village != '':
@@ -1362,13 +1421,13 @@ def user():
                     where_query += f"WHERE aadhar_id IN (SELECT aadhar_id FROM belongs WHERE pincode = (SELECT pincode FROM VillageProfile WHERE name = \"{village}\"))"
                 else:
                     where_query += f" AND aadhar_id IN (SELECT aadhar_id FROM belongs WHERE pincode = (SELECT pincode FROM VillageProfile WHERE name = \"{village}\"))"
-                flag = True
+                flag=True
             if project != '':
                 if flag == False:
                     where_query += f"WHERE aadhar_id IN (SELECT aadhar_id FROM participants WHERE event_name = \"{project}\")"
                 else:
                     where_query += f" AND aadhar_id IN (SELECT aadhar_id FROM participants WHERE event_name = \"{project}\")"
-                flag = True
+                flag=True
 
             # Combine the results of the above query with the results of the phone number search
             if phone_number != '':
@@ -1376,124 +1435,157 @@ def user():
                     where_query += f"WHERE aadhar_id IN (SELECT aadhar_id FROM BeneficiaryPhoneEntity WHERE phone_number = \"{phone_number}\")"
                 else:
                     where_query += f" AND aadhar_id IN (SELECT aadhar_id FROM BeneficiaryPhoneEntity WHERE phone_number = \"{phone_number}\")"
-                flag = True
+                flag=True
 
-            exec_query = cur.execute(where_query)
-            search_results = cur.fetchall()
+            exec_query=cur.execute(where_query)
+            search_results=cur.fetchall()
 
-            updated_profile_details = []
+            updated_profile_details=[]
             for user in profile_details:
                 for result in search_results:
                     if user['aadhar'] == result[0]:
                         updated_profile_details.append(user)
-            profile_details = updated_profile_details
+            profile_details=updated_profile_details
 
         elif request.form['signal'] == 'add':
-            aadhar = request.form['aadhar']
-            name = request.form['name']
-            dob = request.form['dob']
-            education = request.form['education']
-            martial = request.form['martial']
-            gender = request.form['gender']
-            employed = request.form['employed']
-            phone_number = request.form['phone_number']
-            village = request.form['village']
+            aadhar=request.form['aadhar']
+            name=request.form['name']
+            dob=request.form['dob']
+            education=request.form['education']
+            martial=request.form['martial']
+            gender=request.form['gender']
+            employed=request.form['employed']
+            phone_number=request.form['phone_number']
+            village=request.form['village']
+            photo_name=f"{aadhar}.jpg"
+            beneficiary_photo=request.files['beneficiary_photo_add']
 
-            project = request.form['project_name']
-            project_start_year = request.form['project_year']
+
+
+            project=request.form['project_name']
+            project_start_year=request.form['project_year']
 
             # check if project is available for the year
             if check_project_year_combination(project, project_start_year) == False:
-                flash(f"Project {project} is not available for year {project_start_year}", 'danger')
+                flash(
+                    f"Project {project} is not available for year {project_start_year}", 'danger')
                 return redirect('/admin/user')
 
-            add_query = f"INSERT INTO Beneficiary (aadhar_id, name, date_of_birth, gender, marital_status, education, photo, employed, photo_caption) "
-            add_query = add_query + \
+            add_query=f"INSERT INTO Beneficiary (aadhar_id, name, date_of_birth, gender, marital_status, education, photo, employed, photo_caption) "
+            add_query=add_query + \
                 f"VALUES ({aadhar}, \"{name}\", \'{dob}\', \'{gender}\', \'{martial}\', \'{education}\', NULL, \"{employed}\", NULL)"
-            exec_query = cur.execute(add_query)
+            exec_query=cur.execute(add_query)
             mysql.connection.commit()
 
             # Add phone_number query
-            add_phone_query = f"INSERT INTO BeneficiaryPhoneEntity (aadhar_id, phone_number) "
-            add_phone_query = add_phone_query + \
+            add_phone_query=f"INSERT INTO BeneficiaryPhoneEntity (aadhar_id, phone_number) "
+            add_phone_query=add_phone_query + \
                 f"VALUES ({aadhar}, \"{phone_number}\")"
-            exec_query = cur.execute(add_phone_query)
+            exec_query=cur.execute(add_phone_query)
             mysql.connection.commit()
 
             # Add village query
-            add_village_query = f"INSERT INTO belongs (aadhar_id, pincode) "
-            add_village_query = add_village_query + \
+            add_village_query=f"INSERT INTO belongs (aadhar_id, pincode) "
+            add_village_query=add_village_query + \
                 f"VALUES ({aadhar}, (SELECT pincode FROM VillageProfile WHERE name = \"{village}\"))"
-            exec_query = cur.execute(add_village_query)
+            exec_query=cur.execute(add_village_query)
             mysql.connection.commit()
 
             # Add project query
-            add_project_query = f"INSERT INTO participants (aadhar_id, event_name, start_date) "
-            add_project_query = add_project_query + \
+            add_project_query=f"INSERT INTO participants (aadhar_id, event_name, start_date) "
+            add_project_query=add_project_query + \
                 f"VALUES ({aadhar}, \"{project}\", (SELECT start_date FROM Projects WHERE event_name = \"{project}\" AND YEAR(start_date) = \'{project_start_year}\'))"
-            exec_query = cur.execute(add_project_query)
+            exec_query=cur.execute(add_project_query)
             mysql.connection.commit()
+
+            if beneficiary_photo.filename != '':
+                beneficiary_photo.save(os.path.join(
+                    beneficiary_pic_path, photo_name))
+                img_url=url_for(
+                    'static', filename=f'beneficiary_photos/{photo_name}')
+                add_image_query=f"UPDATE Beneficiary SET photo = \"{img_url}\" WHERE aadhar_id = {aadhar}"
+                cur.execute(add_image_query)
+                mysql.connection.commit()
+
 
             return redirect('/admin/user')
 
         elif request.form['signal'] == 'edit':
-            aadhar = request.form['aadhar']
-            name = request.form['name']
-            dob = request.form['dob']
-            education = request.form['education']
-            martial = request.form['martial']
-            gender = request.form['gender']
-            employed = request.form['employed']
-            phone_number = request.form['phone_number']
-            village = request.form['village']
+            aadhar=request.form['aadhar']
+            name=request.form['name']
+            dob=request.form['dob']
+            education=request.form['education']
+            martial=request.form['martial']
+            gender=request.form['gender']
+            employed=request.form['employed']
+            phone_number=request.form['phone_number']
+            village=request.form['village']
+            beneficiary_pic_file=request.files['beneficiary_photo']
+            photo_name=f"{aadhar}.jpg"
 
-            project = request.form['project_name']
-            project_start_year = request.form['project_year']
+
+            project=request.form['project_name']
+            project_start_year=request.form['project_year']
 
             if project != '':
                 if check_project_year_combination(project, project_start_year) == False:
-                    flash(f"Project {project} is not available for year {project_start_year}", 'danger')
+                    flash(
+                        f"Project {project} is not available for year {project_start_year}", 'danger')
                     return redirect('/admin/user')
 
-            edit_query = f"UPDATE Beneficiary "
-            edit_query = edit_query + \
+            edit_query=f"UPDATE Beneficiary "
+            edit_query=edit_query + \
                 f"SET name = \'{name}\', date_of_birth = \'{dob}\', gender = \'{gender}\', marital_status = \'{martial}\', education = \'{education}\', photo = NULL, employed = \"{employed}\", photo_caption = NULL "
-            edit_query = edit_query + f"WHERE aadhar_id = {aadhar}"
-            exec_query = cur.execute(edit_query)
+            edit_query=edit_query + f"WHERE aadhar_id = {aadhar}"
+            exec_query=cur.execute(edit_query)
             mysql.connection.commit()
 
             # Update phone_number, village and project if provided
             if phone_number != '':
-                add_phone_query = f"INSERT INTO BeneficiaryPhoneEntity (aadhar_id, phone_number) "
-                add_phone_query = add_phone_query + \
+                add_phone_query=f"INSERT INTO BeneficiaryPhoneEntity (aadhar_id, phone_number) "
+                add_phone_query=add_phone_query + \
                     f"VALUES ({aadhar}, \"{phone_number}\")"
-                exec_query = cur.execute(add_phone_query)
+                exec_query=cur.execute(add_phone_query)
                 mysql.connection.commit()
 
             if village != '':
-                edit_village_query = f"UPDATE belongs "
-                edit_village_query = edit_village_query + \
+                edit_village_query=f"UPDATE belongs "
+                edit_village_query=edit_village_query + \
                     f"SET pincode = (SELECT pincode FROM VillageProfile WHERE name = \"{village}\") "
-                edit_village_query = edit_village_query + \
+                edit_village_query=edit_village_query + \
                     f"WHERE aadhar_id = {aadhar}"
-                exec_query = cur.execute(edit_village_query)
+                exec_query=cur.execute(edit_village_query)
                 mysql.connection.commit()
 
             if project != '':
-                add_project_query = f"INSERT INTO participants (aadhar_id, event_name, start_date) "
-                add_project_query = add_project_query + \
+                add_project_query=f"INSERT INTO participants (aadhar_id, event_name, start_date) "
+                add_project_query=add_project_query + \
                     f"VALUES ({aadhar}, \"{project}\", (SELECT start_date FROM Projects WHERE event_name = \"{project}\" AND YEAR(start_date) = \'{project_start_year}\'))"
-                exec_query = cur.execute(add_project_query)
+                exec_query=cur.execute(add_project_query)
+                mysql.connection.commit()
+
+            if beneficiary_pic_file.filename != '':
+                beneficiary_pic_file.save(os.path.join(
+                    beneficiary_pic_path, photo_name))
+                img_url=url_for(
+                    'static', filename=f'beneficiary_photos/{photo_name}')
+                edit_photo_query=f"UPDATE Beneficiary SET photo = \"{img_url}\" WHERE aadhar_id = {aadhar}"
+                cur.execute(edit_photo_query)
                 mysql.connection.commit()
 
             return redirect('/admin/user')
 
         elif request.form['signal'] == 'delete':
-            aadhar = request.form['aadhar']
-            delete_query = f"DELETE FROM Beneficiary WHERE aadhar_id = {aadhar}"
-
-            exec_query = cur.execute(delete_query)
+            aadhar=request.form['aadhar']
+            delete_query=f"DELETE FROM Beneficiary WHERE aadhar_id = {aadhar}"
+            exec_query=cur.execute(delete_query)
             mysql.connection.commit()
+            file_location=os.path.join(
+                'static', 'beneficiary_photos', f'{aadhar}.jpg')
+            # delete the file if it exists
+            if os.path.exists(file_location):
+                os.remove(file_location)
+
             return redirect('/admin/user')
 
         elif request.form['signal'] == 'logout':
@@ -1501,6 +1593,7 @@ def user():
 
     return render_template('admin/user.html', searchResults=tuple(), profile_details=profile_details, projects=projects, villages=villages, education_list=education_list)
     # return render_template('admin/user.html')
+
 
 
 @app.route('/admin/team', methods=['GET', 'POST'])
